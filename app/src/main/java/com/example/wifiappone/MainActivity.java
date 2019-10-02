@@ -25,8 +25,11 @@ import java.util.List;
 //5789
 public class MainActivity extends AppCompatActivity {
 
-    private ListView list;
+    private Element [] nets;
+    private WifiManager wifiManager;
+    private List<ScanResult> wifiList;
 
+    private ListView list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +45,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 detectWifi();
-                Toast.makeText(                // метод создания всплывающего окна
-                        MainActivity.this, "Scanning...", Toast.LENGTH_SHORT
-                ).show();                   // метод, который покажет всплвающее окно
+                //Toast.makeText(                // метод создания всплывающего окна
+                //        MainActivity.this, "Scanning...", Toast.LENGTH_SHORT
+                //).show();                   // метод, который покажет всплвающее окно
             }
         });
         //////////////////////
@@ -81,20 +84,31 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    //для вывода списка доступных сетей на экран
-    private Element [] nets;
-    private WifiManager wifiManager;
-    private List<ScanResult> wifiList;
+
+
 
 
     public void detectWifi(){
-        this.wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
-        this.wifiManager.startScan();
-        this.wifiList = this.wifiManager.getScanResults();
+        wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        ScanResult scanResult = null;
+        boolean f = wifiManager.startScan();
+        wifiList = wifiManager.getScanResults();
+
+        for (final ScanResult ap : wifiList) //по приколу
+            Toast.makeText(MainActivity.this, ap.SSID, Toast.LENGTH_LONG).show();
 
         Log.d("TAG", wifiList.toString());
 
+        //Toast.makeText(getApplicationContext(), "Scanning", Toast.LENGTH_SHORT).show();
+
+        //String bssid;
+        //if (!f)
+         //   Toast.makeText(getApplicationContext(), "!f", Toast.LENGTH_SHORT).show();
+
         this.nets = new Element[wifiList.size()];
+
+        //wifiList size = 0 ???
+        Toast.makeText(getApplicationContext(), "size" + wifiList.size(), Toast.LENGTH_SHORT).show();
 
         for (int i = 0; i<wifiList.size(); i++){
             String item = wifiList.get(i).toString();
@@ -107,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
             String level = item_level.split(":")[1];
             nets[i] = new Element(ssid, security, level);
         }
+
 
         AdapterElements adapterElements = new AdapterElements(this);
         ListView netList = (ListView) findViewById(R.id.listItem);
