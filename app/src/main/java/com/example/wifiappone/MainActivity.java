@@ -121,8 +121,8 @@ public class MainActivity extends AppCompatActivity {
 
             nets[i] = new Element(ssid, security, level, bssid);
         }
-        Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(1), Toast.LENGTH_LONG).show();
-
+        //Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(1), Toast.LENGTH_LONG).show();
+        //for debug!
 
         AdapterElements adapterElements = new AdapterElements(this);
         ListView netList = (ListView) findViewById(R.id.listItem);
