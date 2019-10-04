@@ -1,12 +1,15 @@
 package com.example.wifiappone;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.LauncherActivity;
 import android.content.Context;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,10 +33,12 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView list;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},1);
 
         //////////////////////
         list = findViewById(R.id.listItem);
@@ -89,8 +94,6 @@ public class MainActivity extends AppCompatActivity {
         boolean f = wifiManager.startScan();
         wifiList = wifiManager.getScanResults();
 
-        for (final ScanResult ap : wifiList) //по приколу
-            Toast.makeText(MainActivity.this, ap.SSID, Toast.LENGTH_LONG).show();
 
         Log.d("TAG", wifiList.toString());
 
