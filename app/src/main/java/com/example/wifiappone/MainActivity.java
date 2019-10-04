@@ -6,11 +6,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.app.Activity;
 import android.app.LauncherActivity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +24,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,8 +37,30 @@ public class MainActivity extends AppCompatActivity {
     private Element [] nets;
     private WifiManager wifiManager;
     private List<ScanResult> wifiList;
+    private WifiInfo mWifiInfo;
+
+    private WifiConfiguration wifiConfig;
+    private WifiReceiver wifiResiver;
+    private boolean isClick = false;
+    private EditText url;
 
     private ListView list;
+
+
+    public void init() {
+
+       Button conect = (Button) findViewById(R.id.button2);
+       url = (EditText) findViewById(R.id.editText1);
+
+        // создаем новый объект для подключения к конкретной точке
+        wifiConfig = new WifiConfiguration();
+        // сканнер вайфая который нам будет помогать подключаться к нужной точке
+        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+
+        //наш рессивер который будем подключать нас столько сколько нам понадобиться, пока не будет подключена нужная точка
+        wifiResiver = new WifiReceiver();
+    }
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -40,14 +69,33 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},1);
 
+        /////////////////////
+        init();
         //////////////////////
         list = findViewById(R.id.listItem);
         Button button = (Button) findViewById(R.id.button);
+        Button button2 = (Button) findViewById(R.id.button2);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 detectWifi();
+            }
+
+        });
+
+
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //если файвай включен то ничего не делаем иначе включаем его
+
+
+                scheduleSendLocation();
+                //запускаем рессивер
+                isClick = true;
+
             }
         });
 
@@ -87,8 +135,94 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    /*
+    public enum WifiCipherType {
+        WIFICIPHER_WEP,
+        WIFICIPHER_WPA,
+        WIFICIPHER_NOPASS,
+        WIFICIPHER_INVALID
+    }
+
+
+    private WifiConfiguration exists(String SSID) {
+        List<WifiConfiguration> configs = wifiManager.getConfiguredNetworks();
+        for (WifiConfiguration config : configs) {
+            if (config.SSID.equals(SSID)) {
+                return config;
+            }
+        }
+        return null;
+    }
+
+    private WifiConfiguration createWifiInfo(String SSID, String password, WifiCipherType type) {
+        WifiConfiguration config = new WifiConfiguration();
+        config.allowedAuthAlgorithms.clear();
+        config.allowedGroupCiphers.clear();
+        config.allowedKeyManagement.clear();
+        config.allowedPairwiseCiphers.clear();
+        config.allowedProtocols.clear();
+        config.SSID = "\"" + SSID + "\"";
+        if (type == WifiCipherType.WIFICIPHER_NOPASS) {
+            config.wepKeys[0] = "";
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+            config.wepTxKeyIndex = 0;
+        }
+        if (type == WifiCipherType.WIFICIPHER_WEP) {
+            config.preSharedKey = "\"" + password + "\"";
+            config.hiddenSSID = true;
+            config.allowedAuthAlgorithms
+                    .set(WifiConfiguration.AuthAlgorithm.SHARED);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+            config.allowedGroupCiphers
+                    .set(WifiConfiguration.GroupCipher.WEP104);
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+            config.wepTxKeyIndex = 0;
+        }
+        if (type == WifiCipherType.WIFICIPHER_WPA) {
+            config.preSharedKey = "\"" + password + "\"";
+            config.hiddenSSID = true;
+            config.allowedAuthAlgorithms
+                    .set(WifiConfiguration.AuthAlgorithm.OPEN);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+            config.allowedPairwiseCiphers
+                    .set(WifiConfiguration.PairwiseCipher.TKIP);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+            config.allowedPairwiseCiphers
+                    .set(WifiConfiguration.PairwiseCipher.CCMP);
+        } else {
+            return null;
+        }
+        return config;
+    }
+
+
+
+    public boolean connectWifi(String SSID, String password, WifiCipherType type) {
+        while (wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLING) {
+            SystemClock.sleep(100);
+        }
+        if (SSID == null || password == null || SSID.equals("")) {
+            return false;
+        }
+        WifiConfiguration currentConfig = createWifiInfo(SSID, password, type);
+        if (currentConfig == null) {
+            return false;
+        }
+        WifiConfiguration tempConfig = exists(SSID);
+        if (tempConfig == null) {
+            wifiManager.removeNetwork(tempConfig.networkId);
+        }
+        int networkId = wifiManager.addNetwork(currentConfig);
+        wifiManager.enableNetwork(networkId, true);
+        return wifiManager.reconnect();
+    }
+*/
 
     public void detectWifi(){
+
         wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         //ScanResult scanResult = null;
         boolean f = wifiManager.startScan();
@@ -131,6 +265,52 @@ public class MainActivity extends AppCompatActivity {
         ListView netList = (ListView) findViewById(R.id.listItem);
         netList.setAdapter(adapterElements);
     }
+
+
+    public void scheduleSendLocation() {
+
+        registerReceiver(wifiResiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        wifiManager.startScan();
+    }
+
+
+
+    public class WifiReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context c, Intent intent) {
+
+            //сканируем вайфай точки и узнаем какие доступны
+            List<ScanResult> results = wifiManager.getScanResults();
+            //проходимся по всем возможным точкам
+            for (final ScanResult ap : results) {
+                //ищем нужную нам точку с помощью ифа, будет находить то которую вы ввели
+                if(ap.SSID.toString().trim().equals(url.getText().toString().trim())) {
+                    // дальше получаем ее MAC и передаем для коннекрта, MAC получаем из результата
+                    //здесь мы уже начинаем коннектиться
+                    wifiConfig.BSSID = ap.BSSID;
+                    wifiConfig.priority = 1;
+                    wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                    wifiConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                    wifiConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+                    wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                    wifiConfig.status = WifiConfiguration.Status.ENABLED;
+
+                    //получаем ID сети и пытаемся к ней подключиться,
+                    int netId = wifiManager.addNetwork(wifiConfig);
+                    wifiManager.saveConfiguration();
+                    //если вайфай выключен то включаем его
+                    wifiManager.enableNetwork(netId, true);
+                    //если же он включен но подключен к другой сети то перегружаем вайфай.
+                    wifiManager.reconnect();
+                    break;
+                }
+            }
+        }
+    }
+
+
+
 
 
     //внутренний класс

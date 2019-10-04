@@ -5,6 +5,19 @@
     android:orientation="vertical"
     android:padding="5dp">
 
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/editText1"
+        android:layout_width="match_parent"
+        android:layout_height="34dp"
+        android:textSize="18sp"></androidx.appcompat.widget.AppCompatEditText>
+
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Connect" />
+
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="156dp"
@@ -51,5 +64,12 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorBlue" />
+
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="TextView" />
 
 </LinearLayout>
