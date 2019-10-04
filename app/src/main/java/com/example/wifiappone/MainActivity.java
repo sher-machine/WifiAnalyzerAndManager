@@ -19,7 +19,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-import android.widget.Toolbar;
 
 import java.util.List;
 //5789
@@ -43,14 +42,10 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 detectWifi();
-                //Toast.makeText(                // метод создания всплывающего окна
-                //        MainActivity.this, "Scanning...", Toast.LENGTH_SHORT
-                //).show();                   // метод, который покажет всплвающее окно
             }
         });
-        //////////////////////
+
 
         ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -90,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void detectWifi(){
         wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        ScanResult scanResult = null;
+        //ScanResult scanResult = null;
         boolean f = wifiManager.startScan();
         wifiList = wifiManager.getScanResults();
 
@@ -101,26 +96,32 @@ public class MainActivity extends AppCompatActivity {
 
         //Toast.makeText(getApplicationContext(), "Scanning", Toast.LENGTH_SHORT).show();
 
-        //String bssid;
-        //if (!f)
-         //   Toast.makeText(getApplicationContext(), "!f", Toast.LENGTH_SHORT).show();
 
         this.nets = new Element[wifiList.size()];
 
-        //wifiList size = 0 ???
-        Toast.makeText(getApplicationContext(), "size" + wifiList.size(), Toast.LENGTH_SHORT).show();
+
+        //Toast.makeText(getApplicationContext(), "size" + wifiList.size(), Toast.LENGTH_SHORT).show();
 
         for (int i = 0; i<wifiList.size(); i++){
             String item = wifiList.get(i).toString();
+
             String[] vector_item = item.split(",");
+
             String item_essid = vector_item[0];
+            String item_bssid = vector_item[1];
             String item_capabilities = vector_item[2];
             String item_level = vector_item[3];
+
+
             String ssid = item_essid.split(": ")[1];
+            String bssid = item_bssid.split(": ")[1];
             String security = item_capabilities.split(": ")[1];
-            String level = item_level.split(":")[1];
-            nets[i] = new Element(ssid, security, level);
+            String level = item_level.split(": ")[1];
+
+
+            nets[i] = new Element(ssid, security, level, bssid);
         }
+        Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(1), Toast.LENGTH_LONG).show();
 
 
         AdapterElements adapterElements = new AdapterElements(this);
@@ -128,29 +129,6 @@ public class MainActivity extends AppCompatActivity {
         netList.setAdapter(adapterElements);
     }
 
-
-    /*
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        list = findViewById(R.id.listItem);
-        Button button = (Button) findViewById(R.id.button);
-
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                detectWifi();
-                Toast.makeText(                // метод создания всплывающего окна
-                        MainActivity.this, "Scanning...", Toast.LENGTH_SHORT
-                ).show();                   // метод, который покажет всплвающее окно
-            }
-        });
-
-    }
-*/
 
     //внутренний класс
     class AdapterElements extends ArrayAdapter<Object> {
@@ -173,6 +151,9 @@ public class MainActivity extends AppCompatActivity {
 
             TextView tvLevel = (TextView)item.findViewById(R.id.tvLevel);
             String level = nets[position].getLevel();
+
+            TextView tvBSSID = (TextView)item.findViewById(R.id.tvBSSID);
+            tvBSSID.setText(nets[position].getBSSID());
 
             try{
                 int i = Integer.parseInt(level);

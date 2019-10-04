@@ -5,11 +5,13 @@ public class Element {
     private String title;
     private String security;
     private String level;
+    private String BSSID;
 
-    public Element(String title, String security, String level) {
+    public Element(String title, String security, String level, String BSSID) {
         this.title = title;
         this.security = security;
         this.level = level;
+        this.BSSID = BSSID;
     }
 
     public String getTitle() {
@@ -22,5 +24,9 @@ public class Element {
 
     public String getLevel() {
         return level;
+    }
+
+    public String getBSSID() {
+        return  BSSID;
     }
 }
