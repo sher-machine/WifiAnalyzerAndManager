@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private List<ScanResult> wifiList;
     private WifiInfo mWifiInfo;
 
-    private WifiConfiguration wifiConfig;
+    private WifiConfiguration wifiConfig, config;
     private WifiReceiver wifiResiver;
     private boolean isClick = false;
     private EditText url;
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                connect("lolo","");
+                connect("lolo","qwertyuio");
                 //scheduleSendLocation();
                 ////запускаем рессивер
                 //isClick = true;
@@ -306,18 +306,33 @@ public class MainActivity extends AppCompatActivity {
 
         String mSSID = ssid;
         String mPWD = pwd;
-        WifiManager wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiConfiguration config = new WifiConfiguration();
+        wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        config = new WifiConfiguration();
         config.SSID = "\"" + mSSID + "\"";
         if(pwd.equals("")){
             config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
         }
         else{
+
             config.preSharedKey = "\"" + mPWD + "\"";
             config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+
+            ////
+
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+            config.status = WifiConfiguration.Status.ENABLED;
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+            config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+            config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+            config.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+            config.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+            ////
         }
+
         config.status = WifiConfiguration.Status.ENABLED;
         config.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+
         if(!wifiManager.isWifiEnabled()){
             wifiManager.setWifiEnabled(true);
         }
