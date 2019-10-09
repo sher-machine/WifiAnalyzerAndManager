@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},1);
 
         /////////////////////
-        init();
+        //init();
         //////////////////////
         list = findViewById(R.id.listItem);
         Button button = (Button) findViewById(R.id.button);
@@ -89,12 +89,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                //если файвай включен то ничего не делаем иначе включаем его
-
-
-                scheduleSendLocation();
-                //запускаем рессивер
-                isClick = true;
+                connect("lolo","");
+                //scheduleSendLocation();
+                ////запускаем рессивер
+                //isClick = true;
 
             }
         });
@@ -228,15 +226,9 @@ public class MainActivity extends AppCompatActivity {
         boolean f = wifiManager.startScan();
         wifiList = wifiManager.getScanResults();
 
-
         Log.d("TAG", wifiList.toString());
 
-        //Toast.makeText(getApplicationContext(), "Scanning", Toast.LENGTH_SHORT).show();
-
-
         this.nets = new Element[wifiList.size()];
-
-
         //Toast.makeText(getApplicationContext(), "size" + wifiList.size(), Toast.LENGTH_SHORT).show();
 
         for (int i = 0; i<wifiList.size(); i++){
@@ -258,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
 
             nets[i] = new Element(ssid, security, level, bssid);
         }
-        //Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(1), Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(1), Toast.LENGTH_LONG).show();
         //for debug!
 
         AdapterElements adapterElements = new AdapterElements(this);
@@ -309,6 +301,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    public void connect(String ssid, String pwd){
+
+        String mSSID = ssid;
+        String mPWD = pwd;
+        WifiManager wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiConfiguration config = new WifiConfiguration();
+        config.SSID = "\"" + mSSID + "\"";
+        if(pwd.equals("")){
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        }
+        else{
+            config.preSharedKey = "\"" + mPWD + "\"";
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+        }
+        config.status = WifiConfiguration.Status.ENABLED;
+        config.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        if(!wifiManager.isWifiEnabled()){
+            wifiManager.setWifiEnabled(true);
+        }
+        wifiManager.startScan();
+        int networkId = wifiManager.addNetwork(config);
+        wifiManager.disconnect();
+        wifiManager.enableNetwork(networkId, true);
+        wifiManager.reconnect();
+    }
 
 
 
