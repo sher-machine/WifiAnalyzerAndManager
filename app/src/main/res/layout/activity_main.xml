@@ -5,12 +5,37 @@
     android:orientation="vertical"
     android:padding="5dp">
 
-    <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/editText1"
-        android:layout_width="match_parent"
-        android:layout_height="34dp"
-        android:textSize="18sp"></androidx.appcompat.widget.AppCompatEditText>
 
+    <EditText
+        android:id="@+id/editText1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="60sp"
+        android:layout_marginTop="20sp"
+        android:layout_marginRight="40sp"
+        android:ems="10"
+        android:hint="SSID"
+        android:inputType="textEmailAddress"
+        android:padding="12sp"
+        android:paddingBottom="40sp"
+        android:textColor="@color/colorBlue"
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/editText2"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginLeft="60sp"
+        android:layout_marginTop="20sp"
+        android:layout_marginRight="40sp"
+        android:ems="10"
+        android:fontFamily="monospace"
+        android:hint="password"
+        android:inputType="textPassword"
+        android:padding="12sp"
+        android:paddingBottom="40sp"
+        android:textColor="@color/colorBlue"
+        android:textSize="20sp" />/>
 
     <Button
         android:id="@+id/button2"

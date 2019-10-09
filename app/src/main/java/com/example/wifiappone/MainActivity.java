@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private WifiConfiguration wifiConfig, config;
     private WifiReceiver wifiResiver;
     private boolean isClick = false;
-    private EditText url;
+    private EditText url, pswd;
 
     private ListView list;
 
@@ -75,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
         list = findViewById(R.id.listItem);
         Button button = (Button) findViewById(R.id.button);
         Button button2 = (Button) findViewById(R.id.button2);
+        url = (EditText) findViewById(R.id.editText1);
+        pswd = (EditText) findViewById(R.id.editText2);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,7 +91,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                connect("lolo","qwertyuio");
+
+                connect(url.getText().toString().trim(),pswd.getText().toString().trim());
                 //scheduleSendLocation();
                 ////запускаем рессивер
                 //isClick = true;
@@ -250,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
 
             nets[i] = new Element(ssid, security, level, bssid);
         }
-        Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(1), Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(1), Toast.LENGTH_SHORT).show();
         //for debug!
 
         AdapterElements adapterElements = new AdapterElements(this);
