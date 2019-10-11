@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
     //////////////
 
     private void connectToWifi(final String wifiSSID) {
