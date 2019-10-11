@@ -37,16 +37,11 @@ public class MainActivity extends AppCompatActivity {
     private Element [] nets;
     private WifiManager wifiManager;
     private List<ScanResult> wifiList;
-    private WifiInfo mWifiInfo;
-
     private WifiConfiguration wifiConfig, config;
-    private WifiReceiver wifiResiver;
-    private boolean isClick = false;
     private EditText url, pswd;
-
     private ListView list;
 
-
+    /*
     public void init() {
 
        Button conect = (Button) findViewById(R.id.button2);
@@ -61,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
         wifiResiver = new WifiReceiver();
     }
 
+     */
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -69,9 +66,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},1);
 
-        /////////////////////
-        //init();
-        //////////////////////
         list = findViewById(R.id.listItem);
         Button button = (Button) findViewById(R.id.button);
         Button button2 = (Button) findViewById(R.id.button2);
@@ -81,7 +75,11 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                detectWifi();
+                try {
+                    detectWifi();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
 
         });
@@ -90,13 +88,7 @@ public class MainActivity extends AppCompatActivity {
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
                 connect(url.getText().toString().trim(),pswd.getText().toString().trim());
-                //scheduleSendLocation();
-                ////запускаем рессивер
-                //isClick = true;
-
             }
         });
 
@@ -222,8 +214,8 @@ public class MainActivity extends AppCompatActivity {
     }
 */
 
-    public void detectWifi(){
-
+    public void detectWifi() throws InterruptedException {
+        //Thread.sleep(500);
         wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         //ScanResult scanResult = null;
         boolean f = wifiManager.startScan();
@@ -243,17 +235,19 @@ public class MainActivity extends AppCompatActivity {
             String item_bssid = vector_item[1];
             String item_capabilities = vector_item[2];
             String item_level = vector_item[3];
+            String item_freq = vector_item[4];
 
 
             String ssid = item_essid.split(": ")[1];
             String bssid = item_bssid.split(": ")[1];
             String security = item_capabilities.split(": ")[1];
             String level = item_level.split(": ")[1];
+            String freq = item_freq.split(": ")[1];
 
 
-            nets[i] = new Element(ssid, security, level, bssid);
+            nets[i] = new Element(ssid, security, level, bssid, freq);
         }
-        Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(1), Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(0), Toast.LENGTH_SHORT).show();
         //for debug!
 
         AdapterElements adapterElements = new AdapterElements(this);
@@ -262,14 +256,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void scheduleSendLocation() {
 
-        registerReceiver(wifiResiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        wifiManager.startScan();
-    }
-
-
-
+/*
     public class WifiReceiver extends BroadcastReceiver {
 
         @Override
@@ -303,6 +291,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+ */
 
 
     public void connect(String ssid, String pwd){
@@ -348,6 +338,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    public double calculateDistance(double signalLevelInDb, double freqInMHz) {
+        double exp = (27.55 - (20 * Math.log10(freqInMHz)) + Math.abs(signalLevelInDb)) / 20.0;
+        return Math.pow(10.0, exp);
+    }
 
     //внутренний класс
     class AdapterElements extends ArrayAdapter<Object> {
@@ -368,12 +362,24 @@ public class MainActivity extends AppCompatActivity {
             TextView tvSecurity = (TextView)item.findViewById(R.id.tvSecurity);
             tvSecurity.setText(nets[position].getSecurity());
 
-            TextView tvLevel = (TextView)item.findViewById(R.id.tvLevel);
-            String level = nets[position].getLevel();
-
             TextView tvBSSID = (TextView)item.findViewById(R.id.tvBSSID);
             tvBSSID.setText(nets[position].getBSSID());
 
+            TextView tvLevel = (TextView)item.findViewById(R.id.tvLevel);
+            Double lvl = Double.parseDouble(nets[position].getLevel());
+            Double fr = Double.parseDouble(nets[position].getFreq());
+            Double level = calculateDistance(lvl,fr);
+            tvLevel.setText(level.toString());
+
+
+
+
+            //NEW
+            //Toast.makeText(getApplicationContext(), "INFO " + calculateDistance(-26,2462), Toast.LENGTH_SHORT).show();
+
+            //NEW
+
+            /*
             try{
                 int i = Integer.parseInt(level);
                 if (i>-50){
@@ -386,6 +392,11 @@ public class MainActivity extends AppCompatActivity {
             } catch (NumberFormatException e){
                 Log.d("TAG", "Неверный формат строки");
             }
+
+            */
+
+
+
             return item;
         }
     }
