@@ -6,12 +6,14 @@ public class Element {
     private String security;
     private String level;
     private String BSSID;
+    private String freq;
 
-    public Element(String title, String security, String level, String BSSID) {
+    public Element(String title, String security, String level, String BSSID, String freq) {
         this.title = title;
         this.security = security;
         this.level = level;
         this.BSSID = BSSID;
+        this.freq = freq;
     }
 
     public String getTitle() {
@@ -28,5 +30,9 @@ public class Element {
 
     public String getBSSID() {
         return  BSSID;
+    }
+
+    public String getFreq() {
+        return  freq;
     }
 }
