@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.LauncherActivity;
 import android.content.BroadcastReceiver;
@@ -80,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(getApplicationContext(), "list ->" + position , Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "list ->" + position , Toast.LENGTH_SHORT).show();
                 connectToWifi(nets[position].getTitle());
             }
         });
@@ -129,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
         dialog.setContentView(R.layout.connect);
         dialog.setTitle("Connect to Network");
         TextView textSSID = (TextView) dialog.findViewById(R.id.textSSID1);
-
         Button dialogButton = (Button) dialog.findViewById(R.id.okButton);
         final EditText pass1 = (EditText) dialog.findViewById(R.id.textPassword);
         textSSID.setText(wifiSSID);
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String checkPassword = pass1.getText().toString();
                 finallyConnect(checkPassword, wifiSSID);
-                dialog.dismiss();
+                dialog.cancel();
             }
         });
         dialog.show();
@@ -184,6 +184,8 @@ public class MainActivity extends AppCompatActivity {
         wifiManager.disconnect();
         wifiManager.enableNetwork(networkId, true);
         wifiManager.reconnect();
+
+
     }
 
     ///////////////
@@ -490,31 +492,8 @@ public class MainActivity extends AppCompatActivity {
             tvBSSID.setText(nets[position].getBSSID());
 
             TextView tvLevel = (TextView)item.findViewById(R.id.tvLevel);
-            Double lvl = Double.parseDouble(nets[position].getLevel());
-            Double fr = Double.parseDouble(nets[position].getFreq());
-            Double level = calculateDistance(lvl,fr);
+            Double level = calculateDistance(Double.parseDouble(nets[position].getLevel()),Double.parseDouble(nets[position].getFreq()));
             tvLevel.setText(level.toString());
-
-
-
-            /*
-            try{
-                int i = Integer.parseInt(level);
-                if (i>-50){
-                    tvLevel.setText("Высокий");
-                } else if (i<=-50 && i>-80){
-                    tvLevel.setText("Средний");
-                } else if (i<=-80){
-                    tvLevel.setText("Низкий");
-                }
-            } catch (NumberFormatException e){
-                Log.d("TAG", "Неверный формат строки");
-            }
-
-            */
-
-
-
             return item;
         }
     }
