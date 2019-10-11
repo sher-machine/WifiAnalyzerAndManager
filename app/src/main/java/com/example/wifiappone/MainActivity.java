@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private Element [] nets;
     private WifiManager wifiManager;
     private List<ScanResult> wifiList;
-    private WifiConfiguration wifiConfig, config;
+    private WifiConfiguration config;
     private EditText url, pswd;
     private ListView list;
 
@@ -72,17 +73,26 @@ public class MainActivity extends AppCompatActivity {
         url = (EditText) findViewById(R.id.editText1);
         pswd = (EditText) findViewById(R.id.editText2);
 
+
+        ////// click on ListView
+
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(getApplicationContext(), "list ->" + position , Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        //////
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    detectWifi();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                toggleWiFi(true);
+                detectWifi();
                 }
-            }
-
-        });
+            });
 
 
         button2.setOnClickListener(new View.OnClickListener() {
@@ -108,6 +118,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+
+
+
 
     //Cам метод включения Wi-Fi:
     public void toggleWiFi(boolean status) {
@@ -214,15 +228,10 @@ public class MainActivity extends AppCompatActivity {
     }
 */
 
-    public void detectWifi() throws InterruptedException {
-        //Thread.sleep(500);
-        wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        //ScanResult scanResult = null;
-        boolean f = wifiManager.startScan();
+    private void scanSuccess()
+    {
         wifiList = wifiManager.getScanResults();
-
-        Log.d("TAG", wifiList.toString());
-
+        //next using results
         this.nets = new Element[wifiList.size()];
         //Toast.makeText(getApplicationContext(), "size" + wifiList.size(), Toast.LENGTH_SHORT).show();
 
@@ -247,14 +256,61 @@ public class MainActivity extends AppCompatActivity {
 
             nets[i] = new Element(ssid, security, level, bssid, freq);
         }
-        Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(0), Toast.LENGTH_SHORT).show();
+       // Toast.makeText(getApplicationContext(), "INFO " + wifiList.get(0), Toast.LENGTH_SHORT).show();
         //for debug!
 
         AdapterElements adapterElements = new AdapterElements(this);
         ListView netList = (ListView) findViewById(R.id.listItem);
         netList.setAdapter(adapterElements);
+
     }
 
+    private void scanFailure(){
+        Toast.makeText(getApplicationContext(), "FAIL ", Toast.LENGTH_SHORT).show();
+    }
+
+
+    public void detectWifi() {
+        //Thread.sleep(500);
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        //ScanResult scanResult = null;
+
+        /////////////
+        BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                boolean success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
+
+                if (success) {
+                    scanSuccess();
+                } else {
+                    scanFailure();
+                }
+            }
+        };
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
+
+        boolean success = wifiManager.startScan();
+        if (!success) {
+            scanSuccess();
+        }
+        else {
+            scanSuccess();
+        }
+
+
+        /////////////
+
+
+       // boolean f = wifiManager.startScan();
+        //wifiList = wifiManager.getScanResults();
+
+        //Log.d("TAG", wifiList.toString());
+
+
+    }
 
 
 /*
@@ -343,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
         return Math.pow(10.0, exp);
     }
 
-    //внутренний класс
+    //внутренний класс для заполнения ListView
     class AdapterElements extends ArrayAdapter<Object> {
         Activity context;
 
@@ -372,12 +428,6 @@ public class MainActivity extends AppCompatActivity {
             tvLevel.setText(level.toString());
 
 
-
-
-            //NEW
-            //Toast.makeText(getApplicationContext(), "INFO " + calculateDistance(-26,2462), Toast.LENGTH_SHORT).show();
-
-            //NEW
 
             /*
             try{
