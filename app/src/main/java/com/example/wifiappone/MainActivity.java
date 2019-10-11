@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.LauncherActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(getApplicationContext(), "list ->" + position , Toast.LENGTH_SHORT).show();
+                connectToWifi(nets[position].getTitle());
             }
         });
 
@@ -119,6 +121,72 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    //////////////
+
+    private void connectToWifi(final String wifiSSID) {
+        final Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.connect);
+        dialog.setTitle("Connect to Network");
+        TextView textSSID = (TextView) dialog.findViewById(R.id.textSSID1);
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.okButton);
+        final EditText pass1 = (EditText) dialog.findViewById(R.id.textPassword);
+        textSSID.setText(wifiSSID);
+
+        // if button is clicked, connect to the network;
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String checkPassword = pass1.getText().toString();
+                finallyConnect(checkPassword, wifiSSID);
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
+
+    private void finallyConnect(String pwd, String ssid) {
+        String mSSID = ssid;
+        String mPWD = pwd;
+        wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        config = new WifiConfiguration();
+        config.SSID = "\"" + mSSID + "\"";
+        if(pwd.equals("")){
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        }
+        else{
+
+            config.preSharedKey = "\"" + mPWD + "\"";
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+
+            ////
+
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+            config.status = WifiConfiguration.Status.ENABLED;
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+            config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+            config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+            config.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+            config.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+            ////
+        }
+
+        config.status = WifiConfiguration.Status.ENABLED;
+        config.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+
+        if(!wifiManager.isWifiEnabled()){
+            wifiManager.setWifiEnabled(true);
+        }
+        wifiManager.startScan();
+        int networkId = wifiManager.addNetwork(config);
+        wifiManager.disconnect();
+        wifiManager.enableNetwork(networkId, true);
+        wifiManager.reconnect();
+    }
+
+    ///////////////
 
 
 
