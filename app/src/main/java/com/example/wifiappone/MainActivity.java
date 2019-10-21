@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
     private WifiManager wifiManager;
     private List<ScanResult> wifiList;
     private WifiConfiguration config;
-    private EditText url, pswd;
     private ListView list;
 
     /*
@@ -71,9 +70,8 @@ public class MainActivity extends AppCompatActivity {
 
         list = findViewById(R.id.listItem);
         Button button = (Button) findViewById(R.id.button);
-        Button button2 = (Button) findViewById(R.id.button2);
-        url = (EditText) findViewById(R.id.editText1);
-        pswd = (EditText) findViewById(R.id.editText2);
+        final ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
+
 
 
         ////// click on ListView
@@ -98,15 +96,9 @@ public class MainActivity extends AppCompatActivity {
             });
 
 
-        button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                connect(url.getText().toString().trim(),pswd.getText().toString().trim());
-            }
-        });
 
 
-        ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
+
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
@@ -185,7 +177,6 @@ public class MainActivity extends AppCompatActivity {
         wifiManager.disconnect();
         wifiManager.enableNetwork(networkId, true);
         wifiManager.reconnect();
-
 
     }
 
@@ -422,6 +413,7 @@ public class MainActivity extends AppCompatActivity {
  */
 
 
+/*
     public void connect(String ssid, String pwd){
 
         String mSSID = ssid;
@@ -462,6 +454,8 @@ public class MainActivity extends AppCompatActivity {
         wifiManager.enableNetwork(networkId, true);
         wifiManager.reconnect();
     }
+
+ */
 
 
 
