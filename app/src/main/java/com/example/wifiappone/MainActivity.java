@@ -1,13 +1,8 @@
 package com.example.wifiappone;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.LauncherActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,11 +10,9 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -34,6 +27,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.reflect.Method;
 import java.net.NetworkInterface;
@@ -74,9 +70,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},1);
 
-
-
-
         ///////////HOTSPOT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (Settings.System.canWrite(this.getApplicationContext())) {
@@ -89,10 +82,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         //////////HOTSPOT
-
-
-
-
 
 
 
@@ -109,11 +98,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //////
+
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 toggleWiFi(true);
                 detectWifi();
                 }
@@ -124,10 +114,20 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
                 if (isChecked) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     toggleWiFi(true);
                     Toast.makeText(getApplicationContext(), "Wi-Fi Включен!", Toast.LENGTH_SHORT).show();
                 }
                 else {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     toggleWiFi(false);
                     Toast.makeText(getApplicationContext(), "Wi-Fi Выключен!", Toast.LENGTH_SHORT).show();
                 }
@@ -330,96 +330,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
-
-
-    /*
-    public enum WifiCipherType {
-        WIFICIPHER_WEP,
-        WIFICIPHER_WPA,
-        WIFICIPHER_NOPASS,
-        WIFICIPHER_INVALID
-    }
-
-
-    private WifiConfiguration exists(String SSID) {
-        List<WifiConfiguration> configs = wifiManager.getConfiguredNetworks();
-        for (WifiConfiguration config : configs) {
-            if (config.SSID.equals(SSID)) {
-                return config;
-            }
-        }
-        return null;
-    }
-
-    private WifiConfiguration createWifiInfo(String SSID, String password, WifiCipherType type) {
-        WifiConfiguration config = new WifiConfiguration();
-        config.allowedAuthAlgorithms.clear();
-        config.allowedGroupCiphers.clear();
-        config.allowedKeyManagement.clear();
-        config.allowedPairwiseCiphers.clear();
-        config.allowedProtocols.clear();
-        config.SSID = "\"" + SSID + "\"";
-        if (type == WifiCipherType.WIFICIPHER_NOPASS) {
-            config.wepKeys[0] = "";
-            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-            config.wepTxKeyIndex = 0;
-        }
-        if (type == WifiCipherType.WIFICIPHER_WEP) {
-            config.preSharedKey = "\"" + password + "\"";
-            config.hiddenSSID = true;
-            config.allowedAuthAlgorithms
-                    .set(WifiConfiguration.AuthAlgorithm.SHARED);
-            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-            config.allowedGroupCiphers
-                    .set(WifiConfiguration.GroupCipher.WEP104);
-            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-            config.wepTxKeyIndex = 0;
-        }
-        if (type == WifiCipherType.WIFICIPHER_WPA) {
-            config.preSharedKey = "\"" + password + "\"";
-            config.hiddenSSID = true;
-            config.allowedAuthAlgorithms
-                    .set(WifiConfiguration.AuthAlgorithm.OPEN);
-            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-            config.allowedPairwiseCiphers
-                    .set(WifiConfiguration.PairwiseCipher.TKIP);
-            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-            config.allowedPairwiseCiphers
-                    .set(WifiConfiguration.PairwiseCipher.CCMP);
-        } else {
-            return null;
-        }
-        return config;
-    }
-
-
-
-    public boolean connectWifi(String SSID, String password, WifiCipherType type) {
-        while (wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLING) {
-            SystemClock.sleep(100);
-        }
-        if (SSID == null || password == null || SSID.equals("")) {
-            return false;
-        }
-        WifiConfiguration currentConfig = createWifiInfo(SSID, password, type);
-        if (currentConfig == null) {
-            return false;
-        }
-        WifiConfiguration tempConfig = exists(SSID);
-        if (tempConfig == null) {
-            wifiManager.removeNetwork(tempConfig.networkId);
-        }
-        int networkId = wifiManager.addNetwork(currentConfig);
-        wifiManager.enableNetwork(networkId, true);
-        return wifiManager.reconnect();
-    }
-*/
 
     private void scanSuccess()
     {
