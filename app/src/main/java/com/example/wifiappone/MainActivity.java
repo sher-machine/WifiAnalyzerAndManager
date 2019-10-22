@@ -12,6 +12,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
@@ -19,6 +20,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,10 +35,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import java.lang.reflect.Method;
+import java.net.NetworkInterface;
+import java.util.Collections;
 import java.util.List;
 //5789
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG ="MAINACTIVITY" ;
     private Element [] nets;
     private WifiManager wifiManager;
     private List<ScanResult> wifiList;
@@ -59,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
      */
-
+    Button tochka;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -68,13 +74,32 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},1);
 
+
+
+
+        ///////////HOTSPOT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Settings.System.canWrite(this.getApplicationContext())) {
+
+            } else {
+                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                intent.setData(Uri.parse("package:" + this.getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+        }
+        //////////HOTSPOT
+
+
+
+
+
+
+
         list = findViewById(R.id.listItem);
         Button button = (Button) findViewById(R.id.button);
         final ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
-
-
-
-        ////// click on ListView
+        tochka = findViewById(R.id.button2);
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -83,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
                 connectToWifi(nets[position].getTitle());
             }
         });
-
 
         //////
 
@@ -94,9 +118,6 @@ public class MainActivity extends AppCompatActivity {
                 detectWifi();
                 }
             });
-
-
-
 
 
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -112,8 +133,121 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        tochka.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //setWifiTetheringEnabled(true);
+                //CreateNewWifiApNetwork();
+                //changeStateWifiAp(false);
+                //wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                //WifiInfo info = wifiManager.getConnectionInfo();
+               // Toast.makeText(getApplicationContext(), "mac:" + info.getMacAddress(), Toast.LENGTH_SHORT).show();
+
+
+                Toast.makeText(getApplicationContext(), "mac:" + getMacAddr(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
     }
 
+
+    public static String getMacAddr() {
+        try {
+            List <NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif: all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return "";
+                }
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b: macBytes) {
+                    //res1.append(Integer.toHexString(b & 0xFF) + ":");
+                    res1.append(String.format("%02X:", b));
+                }
+
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
+            }
+        } catch (Exception ex) {}
+        return "02:00:00:00:00:00";
+    }
+
+
+
+
+    ////HOSPOT3
+
+    public void setWifiTetheringEnabled(boolean enable) {
+        String SSID="Hello";
+        String PASS="123321123321";
+
+        WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+
+        if(enable){
+            wifiManager.setWifiEnabled(!enable);    // Disable all existing WiFi Network
+        }else {
+            if(!wifiManager.isWifiEnabled())
+                wifiManager.setWifiEnabled(!enable);
+        }
+        Method[] methods = wifiManager.getClass().getDeclaredMethods();
+        for (Method method : methods) {
+            if (method.getName().equals("setWifiApEnabled")) {
+                WifiConfiguration netConfig = new WifiConfiguration();
+                if(!SSID.isEmpty() || !PASS.isEmpty()){
+                    netConfig.SSID=SSID;
+                    netConfig.preSharedKey = PASS;
+                    netConfig.hiddenSSID = false;
+                    netConfig.status = WifiConfiguration.Status.ENABLED;
+                    netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                    netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+                    netConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+                    netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+                    netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+                    netConfig.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+                    netConfig.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+                }
+                try {
+                    method.invoke(wifiManager, netConfig, enable);
+                    Log.e(TAG,"set hotspot enable method");
+                } catch (Exception ex) {
+                }
+                break;
+            }
+        }
+    }
+
+    ///HOTPOT3
+
+
+    ///HOTSPOT4
+
+    private void changeStateWifiAp(boolean activated) {
+
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiConfiguration wifiConfiguration = new WifiConfiguration();
+        wifiConfiguration.SSID = "MyDummySSID";
+        Method method;
+        try {
+            method = wifiManager.getClass().getDeclaredMethod("setWifiApEnabled", WifiConfiguration.class, Boolean.TYPE);
+            method.invoke(wifiManager, wifiConfiguration, activated);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    ///HOTSPOT4
+
+    /////////////
+    public void CreateNewWifiApNetwork() {
+
+        ApManager ap = new ApManager(this.getApplicationContext());
+        ap.createNewNetwork("SolutionBits","SolutionBits");
+    }
 
 
     //////////////
@@ -179,9 +313,6 @@ public class MainActivity extends AppCompatActivity {
         wifiManager.reconnect();
 
     }
-
-    ///////////////
-
 
 
 
@@ -293,7 +424,6 @@ public class MainActivity extends AppCompatActivity {
     private void scanSuccess()
     {
         wifiList = wifiManager.getScanResults();
-        //next using results
         this.nets = new Element[wifiList.size()];
         //Toast.makeText(getApplicationContext(), "size" + wifiList.size(), Toast.LENGTH_SHORT).show();
 
@@ -333,9 +463,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void detectWifi() {
-        //Thread.sleep(500);
+
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        //ScanResult scanResult = null;
+
 
         /////////////
         BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
