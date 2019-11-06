@@ -436,6 +436,7 @@ public class MainActivity extends AppCompatActivity {
             Double level = calculateDistance(Double.parseDouble(nets[position].getLevel()),Double.parseDouble(nets[position].getFreq()));
             tvLevel.setText(level.toString());
 
+
             TextView tvChanell = (TextView)item.findViewById(R.id.tvChanell);
             tvChanell.setText(setChannel(nets[position].getFreq()));
 
