@@ -19,6 +19,10 @@
         tools:ignore="ProtectedPermissions" />
     <uses-feature android:name="android.hardware.wifi" />
 
+    <permission android:name="android.permission.NETWORK_SETTINGS"
+        android:protectionLevel="signature" />
+
+
 
     <uses-permission android:name="android.permission.NETWORK_SETTINGS"
         tools:ignore="ProtectedPermissions" />

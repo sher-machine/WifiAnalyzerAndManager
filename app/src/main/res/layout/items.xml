@@ -40,6 +40,13 @@
             android:textSize="18dp"
             android:text="MAC-адрес" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textSize="18dp"
+            android:text="Канал" />
+
 
     </LinearLayout>
 
@@ -79,6 +86,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textSize="16dp"
             tools:text="Расстояние" />
 
         <TextView
@@ -87,7 +95,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textSize="16dp"
             tools:text="Mac-адрес" />
+
+        <TextView
+            android:id="@+id/tvChanell"
+            android:layout_gravity="end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            tools:text="Канал" />
 
 
     </LinearLayout>
