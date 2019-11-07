@@ -43,7 +43,7 @@
         android:id="@+id/button2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Info about wifi support" />
+        android:text="Info about wifi support + settings for hotspot" />
 
     <ListView
         android:id="@+id/listItem"

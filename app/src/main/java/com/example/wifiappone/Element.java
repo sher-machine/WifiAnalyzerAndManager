@@ -1,5 +1,7 @@
 package com.example.wifiappone;
 
+import android.widget.ImageView;
+
 //Для описания полей пунктов списка
 public class Element {
     private String title;
@@ -7,6 +9,8 @@ public class Element {
     private String level;
     private String BSSID;
     private String freq;
+    private ImageView img;
+
 
     public Element(String title, String security, String level, String BSSID, String freq) {
         this.title = title;

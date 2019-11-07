@@ -8,13 +8,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,6 +60,11 @@ public class MainActivity extends AppCompatActivity {
         final Button button = (Button) findViewById(R.id.button);
         final ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
         tochka = findViewById(R.id.button2);
+
+
+
+
+
         wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
 
@@ -147,16 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else
                 {
-                    String info;
-                    info = "Mac-address:" + getMacAddr() +
-                            "\nSupport 5GHz - " + wifiManager.is5GHzBandSupported()
-                            +"\n Wi-Fi State - " + wifiManager.getWifiState()
-                            + "\nSupport Wi-Fi Direct - " + wifiManager.isP2pSupported()
-                            + "\nSupport Tdls - " + wifiManager.isTdlsSupported()
-                            + "\nSupport always scan Wi-Fi  - " + wifiManager.isScanAlwaysAvailable()
-                            + "\nDeviceToApRttSupported - " + wifiManager.isDeviceToApRttSupported();
-
-                    Toast.makeText(getApplicationContext(), info, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), infoAboutWifiSupported(), Toast.LENGTH_SHORT).show();
                 }
 
 
@@ -177,6 +172,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    public void init()
+    {
+
+    }
 
     public static String getMacAddr() {
         try {
@@ -205,7 +205,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public String infoAboutWifiSupported ()
+    {
+        String info;
+        info = "Mac-address:" + getMacAddr() +
+                "\nSupport 5GHz - " + wifiManager.is5GHzBandSupported()
+                +"\n Wi-Fi State - " + wifiManager.getWifiState()
+                + "\nSupport Wi-Fi Direct - " + wifiManager.isP2pSupported()
+                + "\nSupport Tdls - " + wifiManager.isTdlsSupported()
+                + "\nSupport always scan Wi-Fi  - " + wifiManager.isScanAlwaysAvailable()
+                + "\nDeviceToApRttSupported - " + wifiManager.isDeviceToApRttSupported();
+        return info;
+    }
 
 
 
@@ -382,13 +394,22 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
 
+
         boolean success = wifiManager.startScan();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         if (!success) {
             scanSuccess();
         }
         else {
             scanSuccess();
         }
+
+
 
     }
 
@@ -494,13 +515,13 @@ public class MainActivity extends AppCompatActivity {
         Activity context;
 
         public AdapterElements(Activity context) {
-            super(context, R.layout.items, nets);
+            super(context, R.layout.items2, nets);
             this.context = context;
         }
 
         public View getView(int position, View convertView, ViewGroup parent){
             LayoutInflater inflater = context.getLayoutInflater();
-            View item = inflater.inflate(R.layout.items, null);
+            View item = inflater.inflate(R.layout.items2, null);
 
             TextView tvSsid = (TextView) item.findViewById(R.id.tvSSID);
             tvSsid.setText(nets[position].getTitle());
@@ -513,10 +534,25 @@ public class MainActivity extends AppCompatActivity {
 
             TextView tvLevel = (TextView)item.findViewById(R.id.tvLevel);
             Double level = calculateDistance(Double.parseDouble(nets[position].getLevel()),Double.parseDouble(nets[position].getFreq()));
-            tvLevel.setText(level.toString());
+            tvLevel.setText("≈"+String.format("%.2f",level).toString()+ "meters");
 
             TextView tvChanell = (TextView)item.findViewById(R.id.tvChanell);
-            tvChanell.setText(setChannel(nets[position].getFreq()));
+            tvChanell.setText("channel "+ setChannel(nets[position].getFreq()));
+
+            TextView tvDistance = (TextView)item.findViewById(R.id.tvDistance);
+            tvDistance.setText(nets[position].getLevel() + "dBm");
+
+
+
+            //ImageView img= (ImageView) findViewById(R.id.imageView4);
+            //img.setImageResource(R.drawable.ic_signal_wifi_3_bar);
+
+
+            //if (Integer.parseInt(nets[position].getLevel()) < 55) img.setImageResource(R.drawable.ic_signal_wifi_4_bar);
+            //else if (Integer.parseInt(nets[position].getLevel()) > 90) img.setImageResource(R.drawable.ic_signal_wifi_0_bar);
+            //else if (Integer.parseInt(nets[position].getLevel()) < 65) img.setImageResource(R.drawable.ic_signal_wifi_3_bar);
+            //else if (Integer.parseInt(nets[position].getLevel()) < 75) img.setImageResource(R.drawable.ic_signal_wifi_2_bar);
+            //else if (Integer.parseInt(nets[position].getLevel()) < 85) img.setImageResource(R.drawable.ic_signal_wifi_1_bar);
 
             return item;
         }
