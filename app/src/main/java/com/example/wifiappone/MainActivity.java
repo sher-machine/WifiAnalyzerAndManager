@@ -34,6 +34,8 @@ import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
 
+import static android.net.wifi.WifiManager.WIFI_STATE_DISABLED;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG ="MAINACTIVITY" ;
@@ -55,9 +57,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         list = findViewById(R.id.listItem);
-        Button button = (Button) findViewById(R.id.button);
+        final Button button = (Button) findViewById(R.id.button);
         final ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
         tochka = findViewById(R.id.button2);
+        wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
 
 
@@ -65,7 +68,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //Toast.makeText(getApplicationContext(), "list ->" + position , Toast.LENGTH_SHORT).show();
-                connectToWifi(nets[position].getTitle());
+
+                Toast.makeText(getApplicationContext(), nets[position].getSecurity() , Toast.LENGTH_SHORT).show();
+                if (nets[position].getSecurity().equals("[ESS]")) {
+                    connectToWifi(nets[position].getTitle(), false);
+                }
+                else {
+                    connectToWifi(nets[position].getTitle(), true);
+                }
             }
         });
 
@@ -74,8 +84,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                toggleWiFi(true);
-                detectWifi();
+
+                //toggleWiFi(true);
+                if (wifiManager.getWifiState() == WIFI_STATE_DISABLED)
+                {
+                    Toast.makeText(getApplicationContext(), "Включите Wi-Fi", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    detectWifi();
+
+                    button.setEnabled(false);
+                    button.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            button.setEnabled(true);
+                        }
+                    }, 10000);
+                }
             }
         });
 
@@ -83,9 +109,10 @@ public class MainActivity extends AppCompatActivity {
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
+
                 if (isChecked) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(1500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -94,13 +121,15 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(1500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     toggleWiFi(false);
                     Toast.makeText(getApplicationContext(), "Wi-Fi Выключен!", Toast.LENGTH_SHORT).show();
                 }
+
+
             }
         });
 
@@ -108,8 +137,23 @@ public class MainActivity extends AppCompatActivity {
         tochka.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (wifiManager.getWifiState() == WIFI_STATE_DISABLED)
+                {
+                    Toast.makeText(getApplicationContext(), "Включите Wi-Fi", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    String info;
+                    info = "Mac-address:" + getMacAddr() +
+                            "\nSupport 5GHz - " + wifiManager.is5GHzBandSupported()
+                            +"\n Wi-Fi State - " + wifiManager.getWifiState()
+                            + "\nSupport Wi-Fi Direct - " + wifiManager.isP2pSupported()
+                            + "\nSupport Tdls - " + wifiManager.isTdlsSupported()
+                            + "\nSupport always scan Wi-Fi  -" + wifiManager.isScanAlwaysAvailable()
+                            + "\nDeviceToApRttSupported - " + wifiManager.isDeviceToApRttSupported();
 
-                Toast.makeText(getApplicationContext(), "mac:" + getMacAddr(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), info, Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -146,26 +190,56 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void connectToWifi(final String wifiSSID) {
-        final Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.connect);
-        dialog.setTitle("Connect to Network");
-        TextView textSSID = (TextView) dialog.findViewById(R.id.textSSID1);
-        Button dialogButton = (Button) dialog.findViewById(R.id.okButton);
-        final EditText pass1 = (EditText) dialog.findViewById(R.id.textPassword);
-        textSSID.setText(wifiSSID);
+    private void connectToWifi(final String wifiSSID, boolean pswd) {
 
-        // if button is clicked, connect to the network;
-        dialogButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String checkPassword = pass1.getText().toString();
-                finallyConnect(checkPassword, wifiSSID);
-                dialog.cancel();
-            }
-        });
-        dialog.show();
+        if(pswd == true) {
+            final Dialog dialog = new Dialog(this);
+            dialog.setContentView(R.layout.connect);
+            dialog.setTitle("Connect to Network");
+            TextView textSSID = (TextView) dialog.findViewById(R.id.textSSID1);
+            Button dialogButton = (Button) dialog.findViewById(R.id.okButton);
+            final EditText pass1 = (EditText) dialog.findViewById(R.id.textPassword);
+            textSSID.setText(wifiSSID);
+
+            // if button is clicked, connect to the network;
+            dialogButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String checkPassword = pass1.getText().toString();
+                    finallyConnect(checkPassword, wifiSSID);
+                    dialog.cancel();
+                }
+            });
+            dialog.show();
+        }
+        else
+        {
+            final Dialog dialog = new Dialog(this);
+            dialog.setContentView(R.layout.connectwithoutpswd);
+            dialog.setTitle("Connect to Network");
+            TextView textSSID = (TextView) dialog.findViewById(R.id.textSSID1);
+            Button dialogButton = (Button) dialog.findViewById(R.id.okButton);
+
+            textSSID.setText(wifiSSID);
+
+            // if button is clicked, connect to the network;
+            dialogButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finallyConnect("", wifiSSID);
+                    dialog.cancel();
+                }
+            });
+            dialog.show();
+        }
+
+
     }
+
+
+
+
+
 
     private void finallyConnect(String pwd, String ssid) {
         String mSSID = ssid;
@@ -296,16 +370,6 @@ public class MainActivity extends AppCompatActivity {
         else {
             scanSuccess();
         }
-
-
-        /////////////
-
-
-        // boolean f = wifiManager.startScan();
-        //wifiList = wifiManager.getScanResults();
-
-        //Log.d("TAG", wifiList.toString());
-
 
     }
 
