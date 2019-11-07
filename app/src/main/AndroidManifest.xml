@@ -23,12 +23,6 @@
         android:protectionLevel="signature" />
 
 
-
-    <uses-permission android:name="android.permission.NETWORK_SETTINGS"
-        tools:ignore="ProtectedPermissions" />
-
-
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/cake_for_app"

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -63,13 +64,16 @@ public class MainActivity extends AppCompatActivity {
         wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
 
+        if (wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED ) {
+            toggle.setChecked(true);
+        }
+
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Toast.makeText(getApplicationContext(), "list ->" + position , Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), nets[position].getSecurity() , Toast.LENGTH_SHORT).show();
 
-                Toast.makeText(getApplicationContext(), nets[position].getSecurity() , Toast.LENGTH_SHORT).show();
                 if (nets[position].getSecurity().equals("[ESS]")) {
                     connectToWifi(nets[position].getTitle(), false);
                 }
@@ -100,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             button.setEnabled(true);
                         }
-                    }, 10000);
+                    }, 6000);
                 }
             }
         });
@@ -149,11 +153,26 @@ public class MainActivity extends AppCompatActivity {
                             +"\n Wi-Fi State - " + wifiManager.getWifiState()
                             + "\nSupport Wi-Fi Direct - " + wifiManager.isP2pSupported()
                             + "\nSupport Tdls - " + wifiManager.isTdlsSupported()
-                            + "\nSupport always scan Wi-Fi  -" + wifiManager.isScanAlwaysAvailable()
+                            + "\nSupport always scan Wi-Fi  - " + wifiManager.isScanAlwaysAvailable()
                             + "\nDeviceToApRttSupported - " + wifiManager.isDeviceToApRttSupported();
 
                     Toast.makeText(getApplicationContext(), info, Toast.LENGTH_SHORT).show();
                 }
+
+
+
+                //////////////////      OPEN SETTINGS FOR CONFIGURATE AND ON/OFF HOTSPOT        //////////////////////////
+                final Intent intent = new Intent(Intent.ACTION_MAIN, null);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                final ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
+                intent.setComponent(cn);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity( intent);
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
             }
         });
     }
@@ -343,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void detectWifi() {
 
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+       // wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
 
         /////////////
