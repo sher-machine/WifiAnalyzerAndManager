@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static android.net.wifi.WifiManager.WIFI_STATE_DISABLED;
+import static android.net.wifi.WifiManager.WIFI_STATE_DISABLING;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView list;
 
 
-    Button tochka;
+    Button tochka, btn3;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -60,9 +61,7 @@ public class MainActivity extends AppCompatActivity {
         final Button button = (Button) findViewById(R.id.button);
         final ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
         tochka = findViewById(R.id.button2);
-
-
-
+        btn3 = findViewById(R.id.button3);
 
 
         wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -72,6 +71,12 @@ public class MainActivity extends AppCompatActivity {
             toggle.setChecked(true);
         }
 
+        btn3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), infoAboutConnection(), Toast.LENGTH_LONG).show();
+            }
+        });
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -173,9 +178,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void init()
+    public String infoAboutConnection()
     {
+        String inf="";
+        inf = String.valueOf(wifiManager.getConnectionInfo());
 
+        return inf;
     }
 
     public static String getMacAddr() {
@@ -397,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
 
         boolean success = wifiManager.startScan();
         try {
-            Thread.sleep(1000);
+            Thread.sleep(1700);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -449,8 +457,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
+/*
     public double calculateDistance(double signalLevelInDb, double freqInMHz) {
         double exp = (27.55 - (20 * Math.log10(freqInMHz)) + Math.abs(signalLevelInDb)) / 20.0;
         return Math.pow(10.0, exp);
@@ -505,10 +512,14 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
             default:
-                throw new IllegalStateException("Unexpected value: " + freq);
+                //throw new IllegalStateException("Unexpected value: " + freq);
+                Integer c =  (Integer.parseInt(freq)-5000)/5;
+                ch = c.toString();
         }
         return ch;
     }
+
+ */
 
     //внутренний класс для заполнения ListView
     class AdapterElements extends ArrayAdapter<Object> {
@@ -533,19 +544,20 @@ public class MainActivity extends AppCompatActivity {
             tvBSSID.setText(nets[position].getBSSID());
 
             TextView tvLevel = (TextView)item.findViewById(R.id.tvLevel);
-            Double level = calculateDistance(Double.parseDouble(nets[position].getLevel()),Double.parseDouble(nets[position].getFreq()));
-            tvLevel.setText("≈"+String.format("%.2f",level).toString()+ "meters");
+            tvLevel.setText(nets[position].getLevel());
 
-            TextView tvChanell = (TextView)item.findViewById(R.id.tvChanell);
-            tvChanell.setText("channel "+ setChannel(nets[position].getFreq()));
+            TextView tvChannel = (TextView)item.findViewById(R.id.tvChanell);
+            tvChannel.setText(nets[position].getChannel());
 
             TextView tvDistance = (TextView)item.findViewById(R.id.tvDistance);
-            tvDistance.setText(nets[position].getLevel() + "dBm");
+            tvDistance.setText(nets[position].getDistance());
+
+            TextView tvFreq = (TextView)item.findViewById(R.id.tvFreq);
+            tvFreq.setText(nets[position].getFreq());
 
 
-
-            //ImageView img= (ImageView) findViewById(R.id.imageView4);
-            //img.setImageResource(R.drawable.ic_signal_wifi_3_bar);
+            ImageView tvImage= (ImageView)findViewById(R.id.tvImage);
+            //tvImage.setImageResource(R.drawable.cake);
 
 
             //if (Integer.parseInt(nets[position].getLevel()) < 55) img.setImageResource(R.drawable.ic_signal_wifi_4_bar);
