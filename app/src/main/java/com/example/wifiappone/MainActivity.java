@@ -8,11 +8,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private ListView list;
 
 
+    private static final int REQUEST_STATE = 1;
+
     Button tochka, btn3;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -75,6 +79,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Toast.makeText(getApplicationContext(), infoAboutConnection(), Toast.LENGTH_LONG).show();
+
+
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+                startActivityForResult(intent, REQUEST_STATE);
+
+
             }
         });
 
@@ -178,12 +192,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public String infoAboutConnection()
-    {
-        String inf="";
-        inf = String.valueOf(wifiManager.getConnectionInfo());
-
-        return inf;
+    public String infoAboutConnection() {
+        return String.valueOf(wifiManager.getConnectionInfo());
     }
 
     public static String getMacAddr() {
@@ -216,8 +226,7 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public String infoAboutWifiSupported ()
     {
-        String info;
-        info = "Mac-address:" + getMacAddr() +
+        String info = "Mac-address:" + getMacAddr() +
                 "\nSupport 5GHz - " + wifiManager.is5GHzBandSupported()
                 +"\n Wi-Fi State - " + wifiManager.getWifiState()
                 + "\nSupport Wi-Fi Direct - " + wifiManager.isP2pSupported()
@@ -337,7 +346,6 @@ public class MainActivity extends AppCompatActivity {
             wifiManager.setWifiEnabled(false);
         }
     }
-
 
     private void scanSuccess()
     {

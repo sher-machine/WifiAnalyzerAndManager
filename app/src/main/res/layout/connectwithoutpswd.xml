@@ -20,6 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/textSSID1"
         android:layout_marginLeft="15dp"
+
         android:text="Connect"/>
 
 </RelativeLayout>
