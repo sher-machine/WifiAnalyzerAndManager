@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_STATE = 1;
 
-    Button tochka, btn3;
+    Button tochka, btn3,btn4,btn5;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -66,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         final ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
         tochka = findViewById(R.id.button2);
         btn3 = findViewById(R.id.button3);
+        btn4 = findViewById(R.id.button4);
+        btn5 = findViewById(R.id.button5);
 
 
         wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -78,19 +80,40 @@ public class MainActivity extends AppCompatActivity {
         btn3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getApplicationContext(), infoAboutConnection(), Toast.LENGTH_LONG).show();
-
-
                 Intent intent = new Intent();
                 intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.parse("package:" + getPackageName()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                 intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
                 startActivityForResult(intent, REQUEST_STATE);
+            }
+        });
 
+
+        btn4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), infoAboutConnection(), Toast.LENGTH_LONG).show();
 
             }
         });
+
+
+        btn5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (wifiManager.getWifiState() == WIFI_STATE_DISABLED)
+                {
+                    Toast.makeText(getApplicationContext(), "Включите Wi-Fi", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), infoAboutWifiSupported(), Toast.LENGTH_LONG).show();
+                }
+
+            }
+        });
+
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -127,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             button.setEnabled(true);
                         }
-                    }, 6000);
+                    }, 5000);
                 }
             }
         });
@@ -164,16 +187,6 @@ public class MainActivity extends AppCompatActivity {
         tochka.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (wifiManager.getWifiState() == WIFI_STATE_DISABLED)
-                {
-                    Toast.makeText(getApplicationContext(), "Включите Wi-Fi", Toast.LENGTH_SHORT).show();
-                }
-                else
-                {
-                    Toast.makeText(getApplicationContext(), infoAboutWifiSupported(), Toast.LENGTH_SHORT).show();
-                }
-
-
 
                 //////////////////      OPEN SETTINGS FOR CONFIGURATE AND ON/OFF HOTSPOT        //////////////////////////
                 final Intent intent = new Intent(Intent.ACTION_MAIN, null);
@@ -183,10 +196,6 @@ public class MainActivity extends AppCompatActivity {
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity( intent);
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
             }
         });
     }
