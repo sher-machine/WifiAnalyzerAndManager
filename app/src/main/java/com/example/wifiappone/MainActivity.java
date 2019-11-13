@@ -51,19 +51,21 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_STATE = 1;
 
-    Button tochka, btn3,btn4,btn5;
+    Button tochka, btn3,btn4,btn5,button;
+    ToggleButton toggle;
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},1);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},1);
+        }
 
 
         list = findViewById(R.id.listItem);
-        final Button button = (Button) findViewById(R.id.button);
-        final ToggleButton toggle = (ToggleButton) findViewById(R.id.wifi_switcher);
+        button = findViewById(R.id.button);
+        toggle  = findViewById(R.id.wifi_switcher);
         tochka = findViewById(R.id.button2);
         btn3 = findViewById(R.id.button3);
         btn4 = findViewById(R.id.button4);
