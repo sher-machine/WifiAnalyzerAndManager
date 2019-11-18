@@ -15,6 +15,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,15 +30,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.lang.reflect.Method;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
 
 import static android.net.wifi.WifiManager.WIFI_STATE_DISABLED;
-import static android.net.wifi.WifiManager.WIFI_STATE_DISABLING;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -162,24 +162,30 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
 
-                if (isChecked) {
-                    try {
-                        Thread.sleep(1500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                if (!isWifiApEnabled()) {
+                    if (isChecked) {
+                        try {
+                            Thread.sleep(1500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        toggleWiFi(true);
+                        Toast.makeText(getApplicationContext(), "Wi-Fi Включен!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        try {
+                            Thread.sleep(1500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        toggleWiFi(false);
+                        Toast.makeText(getApplicationContext(), "Wi-Fi Выключен!", Toast.LENGTH_SHORT).show();
                     }
-                    toggleWiFi(true);
-                    Toast.makeText(getApplicationContext(), "Wi-Fi Включен!", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    try {
-                        Thread.sleep(1500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    toggleWiFi(false);
-                    Toast.makeText(getApplicationContext(), "Wi-Fi Выключен!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Для корректной работы отключите точку доступа", Toast.LENGTH_LONG).show();
                 }
+
+
 
 
             }
@@ -190,14 +196,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                //////////////////      OPEN SETTINGS FOR CONFIGURATE AND ON/OFF HOTSPOT        //////////////////////////
-                final Intent intent = new Intent(Intent.ACTION_MAIN, null);
-                intent.addCategory(Intent.CATEGORY_LAUNCHER);
-                final ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
-                intent.setComponent(cn);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity( intent);
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+               hotSpot(true);
             }
         });
     }
@@ -220,7 +219,6 @@ public class MainActivity extends AppCompatActivity {
 
                 StringBuilder res1 = new StringBuilder();
                 for (byte b: macBytes) {
-                    //res1.append(Integer.toHexString(b & 0xFF) + ":");
                     res1.append(String.format("%02X:", b));
                 }
 
@@ -234,16 +232,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public String infoAboutWifiSupported ()
-    {
-        String info = "Mac-address:" + getMacAddr() +
-                "\nSupport 5GHz - " + wifiManager.is5GHzBandSupported()
-                +"\n Wi-Fi State - " + wifiManager.getWifiState()
-                + "\nSupport Wi-Fi Direct - " + wifiManager.isP2pSupported()
-                + "\nSupport Tdls - " + wifiManager.isTdlsSupported()
-                + "\nSupport always scan Wi-Fi  - " + wifiManager.isScanAlwaysAvailable()
-                + "\nDeviceToApRttSupported - " + wifiManager.isDeviceToApRttSupported();
+    public String infoAboutWifiSupported () {
+        String info = "Mac-address:" + getMacAddr()
+                +"\n Wi-Fi State - " + wifiManager.getWifiState();
+
+               if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
+                   info = info + "\nSupport 5GHz - " + wifiManager.is5GHzBandSupported()
+                           + "\nSupport Wi-Fi Direct - " + wifiManager.isP2pSupported()
+                           + "\nSupport Tdls - " + wifiManager.isTdlsSupported()
+                           + "\nSupport always scan Wi-Fi  - " + wifiManager.isScanAlwaysAvailable()
+                           + "\nDeviceToApRttSupported - " + wifiManager.isDeviceToApRttSupported();
+               }
         return info;
     }
 
@@ -295,11 +294,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-
-
-
-
     private void finallyConnect(String pwd, String ssid) {
         String mSSID = ssid;
         String mPWD = pwd;
@@ -344,17 +338,47 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    //Cам метод включения Wi-Fi:
+
+    public WIFI_AP_STATE getWifiApState() {
+        try {
+            Method method = wifiManager.getClass().getMethod("getWifiApState");
+
+            int tmp = ((Integer) method.invoke(wifiManager));
+
+            // Fix for Android 4
+            if (tmp > 10) {
+                tmp = tmp - 10;
+            }
+
+            return WIFI_AP_STATE.class.getEnumConstants()[tmp];
+        } catch (Exception e) {
+            Log.e(this.getClass().toString(), "", e);
+            return WIFI_AP_STATE.WIFI_AP_STATE_FAILED;
+        }
+    }
+
+    public boolean isWifiApEnabled() {
+        return getWifiApState() == WIFI_AP_STATE.WIFI_AP_STATE_ENABLED;
+    }
+
+
+
+
     public void toggleWiFi(boolean status) {
         WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
 
-        //Включаем WiFi помощью команды wifiManager.setWifiEnabled(true):
-        if (status == true && !wifiManager.isWifiEnabled()) {
-            wifiManager.setWifiEnabled(true);
+        if (!isWifiApEnabled()) {
+            //Включаем WiFi помощью команды wifiManager.setWifiEnabled(true):
+            if (status == true && !wifiManager.isWifiEnabled()) {
+                wifiManager.setWifiEnabled(true);
+            }
+            //Выключаем WiFi с помощью команды wifiManager.setWifiEnabled(false):
+            else if (status == false && wifiManager.isWifiEnabled()) {
+                wifiManager.setWifiEnabled(false);
+            }
         }
-        //Выключаем WiFi с помощью команды wifiManager.setWifiEnabled(false):
-        else if (status == false && wifiManager.isWifiEnabled()) {
-            wifiManager.setWifiEnabled(false);
+        else {
+            Toast.makeText(getApplicationContext(), "Для корректной работы отключите точку доступа", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -364,8 +388,14 @@ public class MainActivity extends AppCompatActivity {
         this.nets = new Element[wifiList.size()];
         //Toast.makeText(getApplicationContext(), "size" + wifiList.size(), Toast.LENGTH_SHORT).show();
 
+        for (int i = 0; i<wifiList.size(); i++) {
+            String item = wifiList.get(i).toString();
+            Log.d(TAG,item);
+        }
+
         for (int i = 0; i<wifiList.size(); i++){
             String item = wifiList.get(i).toString();
+
 
             String[] vector_item = item.split(",");
 
@@ -401,14 +431,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void detectWifi() {
 
-       // wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-
         /////////////
         BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                boolean success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
+                boolean success = false;
+                success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
+
 
                 if (success) {
                     scanSuccess();
@@ -421,7 +450,6 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
 
-
         boolean success = wifiManager.startScan();
         try {
             Thread.sleep(1700);
@@ -430,115 +458,63 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!success) {
-            scanSuccess();
+            //scanSuccess();
         }
         else {
             scanSuccess();
         }
 
-
-
     }
 
 
-/*
-    public class WifiReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context c, Intent intent) {
-            //сканируем вайфай точки и узнаем какие доступны
-            List<ScanResult> results = wifiManager.getScanResults();
-            //проходимся по всем возможным точкам
-            for (final ScanResult ap : results) {
-                //ищем нужную нам точку с помощью ифа, будет находить то которую вы ввели
-                if(ap.SSID.toString().trim().equals(url.getText().toString().trim())) {
-                    // дальше получаем ее MAC и передаем для коннекрта, MAC получаем из результата
-                    //здесь мы уже начинаем коннектиться
-                    wifiConfig.BSSID = ap.BSSID;
-                    wifiConfig.priority = 1;
-                    wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                    wifiConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                    wifiConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
-                    wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                    wifiConfig.status = WifiConfiguration.Status.ENABLED;
-                    //получаем ID сети и пытаемся к ней подключиться,
-                    int netId = wifiManager.addNetwork(wifiConfig);
-                    wifiManager.saveConfiguration();
-                    //если вайфай выключен то включаем его
-                    wifiManager.enableNetwork(netId, true);
-                    //если же он включен но подключен к другой сети то перегружаем вайфай.
-                    wifiManager.reconnect();
-                    break;
+    public void hotSpot(boolean enable) {
+        //после 28api (android 8 )
+        if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+            //////////////////      OPEN SETTINGS FOR CONFIGURATE AND ON/OFF HOTSPOT        //////////////////////////
+            final Intent intent = new Intent(Intent.ACTION_MAIN, null);
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            final ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
+            intent.setComponent(cn);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+        else{
+            startHotSpot16_api(enable);
+        }
+    }
+
+    public void startHotSpot16_api(boolean enable) {
+
+
+        String SSID="Hello";
+        String PASS="123321123321";
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        if(enable){
+            wifiManager.setWifiEnabled(!enable);    // Disable all existing WiFi Network
+        }else {
+            if (!wifiManager.isWifiEnabled())
+                wifiManager.setWifiEnabled(!enable);
+        }
+        Method[] methods = wifiManager.getClass().getDeclaredMethods();
+        for (Method method : methods) {
+            if (method.getName().equals("setWifiApEnabled")) {
+                WifiConfiguration netConfig = new WifiConfiguration();
+                if(!SSID.isEmpty() || !PASS.isEmpty()){
+                    netConfig.SSID=SSID;
+                    netConfig.preSharedKey = PASS;
+                    netConfig.hiddenSSID = false;
+                    netConfig.status = WifiConfiguration.Status.ENABLED;              netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);              netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);           netConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+                    netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);              netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);                netConfig.allowedProtocols.set(WifiConfiguration.Protocol.RSN);     netConfig.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
                 }
-            }
-        }
-    }
- */
+                try {
+                    method.invoke(wifiManager, netConfig, enable);
+                    Log.e(TAG,"set hotspot enable method");
+                } catch (Exception ex) {}
+                break;}}}
 
 
 
-/*
-    public double calculateDistance(double signalLevelInDb, double freqInMHz) {
-        double exp = (27.55 - (20 * Math.log10(freqInMHz)) + Math.abs(signalLevelInDb)) / 20.0;
-        return Math.pow(10.0, exp);
-    }
-
-    public String setChannel(String freq){
-        String ch;
-        switch (freq){
-            case "2412":
-                ch="1";
-                break;
-
-            case "2417":
-                ch="2";
-                break;
-
-            case "2422":
-                ch="3";
-                break;
-            case "2427":
-                ch = "4";
-                break;
-            case "2432":
-                ch = "5";
-                break;
-            case "2437":
-                ch = "6";
-                break;
-            case "2442":
-                ch = "7";
-                break;
-            case "2447":
-                ch = "8";
-                break;
-            case "2452":
-                ch = "9";
-                break;
-            case "2457":
-                ch = "10";
-                break;
-            case "2462":
-                ch = "11";
-                break;
-            case "2467":
-                ch = "12";
-                break;
-            case "2472":
-                ch = "13";
-                break;
-            case "2477":
-                ch = "14";
-                break;
-
-            default:
-                //throw new IllegalStateException("Unexpected value: " + freq);
-                Integer c =  (Integer.parseInt(freq)-5000)/5;
-                ch = c.toString();
-        }
-        return ch;
-    }
-
- */
 
     //внутренний класс для заполнения ListView
     class AdapterElements extends ArrayAdapter<Object> {
