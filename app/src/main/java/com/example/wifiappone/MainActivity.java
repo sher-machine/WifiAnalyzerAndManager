@@ -95,8 +95,14 @@ public class MainActivity extends AppCompatActivity {
         btn4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getApplicationContext(), infoAboutConnection(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), infoAboutConnection(), Toast.LENGTH_LONG).show();
 
+
+                //Intent intent= new Intent(".direct_activity_main.xml");           //класс для перехода да другую страницу
+                //startActivity(intent);
+
+                Intent intent = new Intent(getApplicationContext(), DirectMainActivity.class);
+                startActivity(intent);
             }
         });
 
