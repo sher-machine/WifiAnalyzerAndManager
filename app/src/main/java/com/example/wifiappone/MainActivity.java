@@ -98,11 +98,21 @@ public class MainActivity extends AppCompatActivity {
                 //Toast.makeText(getApplicationContext(), infoAboutConnection(), Toast.LENGTH_LONG).show();
 
 
-                //Intent intent= new Intent(".direct_activity_main.xml");           //класс для перехода да другую страницу
-                //startActivity(intent);
+                if (wifiManager.getWifiState() == WIFI_STATE_DISABLED)
+                {
+                    Toast.makeText(getApplicationContext(), "Включите Wi-Fi", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    if (!isWifiApEnabled()) {
+                        Intent intent = new Intent(getApplicationContext(), DirectMainActivity.class);
+                        startActivity(intent);
+                    }
+                    else {
+                        Toast.makeText(getApplicationContext(), "Для корректной работы отключите точку доступа", Toast.LENGTH_LONG).show();
+                    }
+                }
 
-                Intent intent = new Intent(getApplicationContext(), DirectMainActivity.class);
-                startActivity(intent);
             }
         });
 
@@ -190,9 +200,6 @@ public class MainActivity extends AppCompatActivity {
                 else {
                     Toast.makeText(getApplicationContext(), "Для корректной работы отключите точку доступа", Toast.LENGTH_LONG).show();
                 }
-
-
-
 
             }
         });
@@ -381,6 +388,7 @@ public class MainActivity extends AppCompatActivity {
             //Выключаем WiFi с помощью команды wifiManager.setWifiEnabled(false):
             else if (status == false && wifiManager.isWifiEnabled()) {
                 wifiManager.setWifiEnabled(false);
+
             }
         }
         else {
@@ -402,7 +410,6 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i<wifiList.size(); i++){
             String item = wifiList.get(i).toString();
 
-
             String[] vector_item = item.split(",");
 
             String item_essid = vector_item[0];
@@ -410,7 +417,6 @@ public class MainActivity extends AppCompatActivity {
             String item_capabilities = vector_item[2];
             String item_level = vector_item[3];
             String item_freq = vector_item[4];
-
 
             String ssid = item_essid.split(": ")[1];
             String bssid = item_bssid.split(": ")[1];
@@ -527,13 +533,13 @@ public class MainActivity extends AppCompatActivity {
         Activity context;
 
         public AdapterElements(Activity context) {
-            super(context, R.layout.items2, nets);
+            super(context, R.layout.items, nets);
             this.context = context;
         }
 
         public View getView(int position, View convertView, ViewGroup parent){
             LayoutInflater inflater = context.getLayoutInflater();
-            View item = inflater.inflate(R.layout.items2, null);
+            View item = inflater.inflate(R.layout.items, null);
 
             TextView tvSsid = (TextView) item.findViewById(R.id.tvSSID);
             tvSsid.setText(nets[position].getTitle());
@@ -558,7 +564,7 @@ public class MainActivity extends AppCompatActivity {
 
 
             ImageView tvImage= (ImageView)findViewById(R.id.tvImage);
-            //tvImage.setImageResource(R.drawable.cake);
+            //tvImage.setImageResource(R.drawable.ic_signal_wifi_2_bar);
 
 
             //if (Integer.parseInt(nets[position].getLevel()) < 55) img.setImageResource(R.drawable.ic_signal_wifi_4_bar);
