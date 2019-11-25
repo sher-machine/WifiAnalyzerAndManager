@@ -126,7 +126,6 @@ public class DirectMainActivity extends AppCompatActivity implements WifiP2pMana
 
                 AlertDialog alert = miaAlert.create();
                 alert.show();
-
             }
         });
     }

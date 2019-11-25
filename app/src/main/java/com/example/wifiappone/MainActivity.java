@@ -8,12 +8,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,7 +31,17 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.Task;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.reflect.Method;
@@ -50,6 +62,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     private static final int REQUEST_STATE = 1;
+    private final int REQUEST_ENABLE_LOCATION_SYSTEM_SETTINGS = 101;
+    private boolean isHotspot26apiPlusEnabled = false;
+    private WifiManager.LocalOnlyHotspotReservation mReservation;
+    WifiConfiguration currentConfig;
 
     Button tochka, btn3,btn4,btn5,button;
     ToggleButton toggle;
@@ -402,10 +418,13 @@ public class MainActivity extends AppCompatActivity {
         this.nets = new Element[wifiList.size()];
         //Toast.makeText(getApplicationContext(), "size" + wifiList.size(), Toast.LENGTH_SHORT).show();
 
+        /*
         for (int i = 0; i<wifiList.size(); i++) {
             String item = wifiList.get(i).toString();
             Log.d(TAG,item);
         }
+
+         */
 
         for (int i = 0; i<wifiList.size(); i++){
             String item = wifiList.get(i).toString();
@@ -444,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
     public void detectWifi() {
 
         /////////////
-        BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
+        WifiReceiver wifiScanReceiver = new WifiReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 boolean success = false;
@@ -462,6 +481,7 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
 
+
         boolean success = wifiManager.startScan();
         try {
             Thread.sleep(1700);
@@ -476,19 +496,26 @@ public class MainActivity extends AppCompatActivity {
             scanSuccess();
         }
 
+
+
     }
 
 
     public void hotSpot(boolean enable) {
         //после 28api (android 8 )
         if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+
+            enableLocationSettings();
+
             //////////////////      OPEN SETTINGS FOR CONFIGURATE AND ON/OFF HOTSPOT        //////////////////////////
+            /*
             final Intent intent = new Intent(Intent.ACTION_MAIN, null);
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
             final ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
             intent.setComponent(cn);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
+             */
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
         else{
@@ -524,6 +551,177 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG,"set hotspot enable method");
                 } catch (Exception ex) {}
                 break;}}}
+
+
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////   LOCAL
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void turnOn26apiPlusHotspot(){
+        WifiManager manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        manager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback(){
+
+            @Override
+            public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation) {
+                super.onStarted(reservation);
+                Log.d(TAG, "Wifi Hotspot is on now");
+                mReservation = reservation;
+                isHotspot26apiPlusEnabled = true;
+                currentConfig = mReservation.getWifiConfiguration();
+
+                Log.v("DANG", "THE PASSWORD IS: "
+                        + currentConfig.preSharedKey
+                        + " \n SSID is : "
+                        + currentConfig.SSID);
+
+                Toast.makeText(getApplicationContext(),  "THE PASSWORD IS: "
+                        + currentConfig.preSharedKey
+                        + " \n SSID is : "
+                        + currentConfig.SSID, Toast.LENGTH_LONG).show();
+
+            }
+
+            @Override
+            public void onStopped() {
+                super.onStopped();
+                Log.d(TAG, "onStopped: ");
+                isHotspot26apiPlusEnabled = false;
+            }
+
+            @Override
+            public void onFailed(int reason) {
+                super.onFailed(reason);
+                Log.d(TAG, "onFailed: ");
+                isHotspot26apiPlusEnabled = false;
+            }
+        },new Handler());
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void turnOff26apiPlusHotspot() {
+        if (mReservation != null) {
+            mReservation.close();
+            isHotspot26apiPlusEnabled = false;
+        }
+    }
+
+
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void findMethods() {
+
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        String str = "";
+        Class<?> cls = wm.getClass();
+        Method[] methods = cls.getMethods();
+        for (Method method : methods) {
+            str = str + " METHOD:" + method.getName()+"\n";
+        }
+
+        //hw.setText(str+ "q");
+        Log.d(TAG,str);
+
+
+        String str2="DECLARED ";
+        Class<?> cls2 = wm.getClass();
+        Method[] methods2 = cls2.getDeclaredMethods();
+        for (Method method2 : methods2) {
+            str2 = str2 + " METHOD:" + method2.getName()+"\n";
+        }
+
+        Log.d(TAG,str2);
+
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void toggleHotspot26apiPlus() {
+        if (!isHotspot26apiPlusEnabled) {
+            turnOn26apiPlusHotspot();
+        } else {
+            turnOff26apiPlusHotspot();
+        }
+    }
+
+
+
+    ////////////////////
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void enableLocationSettings() {
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10);
+        mLocationRequest.setSmallestDisplacement(10);
+        mLocationRequest.setFastestInterval(10);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest)
+                .setAlwaysShow(false); // Show dialog
+
+        Task<LocationSettingsResponse> task= LocationServices.getSettingsClient(this).checkLocationSettings(builder.build());
+
+        task.addOnCompleteListener(task1 -> {
+            try {
+                LocationSettingsResponse response = task1.getResult(ApiException.class);
+                // All location settings are satisfied. The client can initialize location
+                // requests here.
+                toggleHotspot26apiPlus();
+
+            } catch (ApiException exception) {
+                switch (exception.getStatusCode()) {
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied. But could be fixed by showing the
+                        // user a dialog.
+                        try {
+                            // Cast to a resolvable exception.
+                            ResolvableApiException resolvable = (ResolvableApiException) exception;
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            resolvable.startResolutionForResult(MainActivity.this, REQUEST_ENABLE_LOCATION_SYSTEM_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        } catch (ClassCastException e) {
+                            // Ignore, should be an impossible error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way to fix the
+                        // settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
+        switch (requestCode) {
+            case REQUEST_ENABLE_LOCATION_SYSTEM_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        // All required changes were successfully made
+                        toggleHotspot26apiPlus();
+                        Toast.makeText(MainActivity.this, states.isLocationPresent() + "", Toast.LENGTH_SHORT).show();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        // The user was asked to change settings, but chose not to
+                        Toast.makeText(MainActivity.this, "Canceled", Toast.LENGTH_SHORT).show();
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////      LOCAL
 
 
 

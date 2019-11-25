@@ -32,7 +32,7 @@ public class Element {
 
     public String getDistance() {
         double lvl = calculateDistance(Double.parseDouble(level),Double.parseDouble(freq));
-        String rlvl = "≈"+String.format("%.2f",lvl).toString()+ "meters";
+        String rlvl = "≈"+ String.format("%.1f",lvl) + "meters";
         return rlvl;
     }
 
