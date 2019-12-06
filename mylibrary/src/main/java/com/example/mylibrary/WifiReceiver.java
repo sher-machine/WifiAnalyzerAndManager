@@ -1,4 +1,4 @@
-package com.example.wifiappone;
+package com.example.mylibrary;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -11,7 +11,6 @@ import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
@@ -80,7 +79,6 @@ public class WifiReceiver extends BroadcastReceiver {
                     .setContentText("Connected to " + ssid)
                     .setStyle(new NotificationCompat.BigTextStyle()
                             .bigText("You're connected to " + ssid + " at " + mac))
-                    .setSmallIcon(R.mipmap.cake_for_app)
                     .build();
             ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
                     .notify(0, n);

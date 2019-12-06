@@ -2,7 +2,6 @@ package com.example.wifiappone;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.IntentFilter;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -24,7 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 
 
-            //https://github.com/MarcoNordio/WifiDirectConnection
+//https://github.com/MarcoNordio/WifiDirectConnection
 
 public class DirectMainActivity extends AppCompatActivity implements WifiP2pManager.ConnectionInfoListener {
 
@@ -110,18 +109,14 @@ public class DirectMainActivity extends AppCompatActivity implements WifiP2pMana
                 miaAlert.setTitle("Server");
 
                 miaAlert.setCancelable(false);
-                miaAlert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        config.groupOwnerIntent=15;
-                        Connect(config);
-                    }
+                miaAlert.setPositiveButton("Yes", (dialog, id) -> {
+                    config.groupOwnerIntent=15;
+                    Connect(config);
                 });
 
-                miaAlert.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        config.groupOwnerIntent=0;
-                        Connect(config);
-                    }
+                miaAlert.setNegativeButton("No", (dialog, id) -> {
+                    config.groupOwnerIntent=0;
+                    Connect(config);
                 });
 
                 AlertDialog alert = miaAlert.create();
@@ -163,7 +158,6 @@ public class DirectMainActivity extends AppCompatActivity implements WifiP2pMana
         }
     }
 
-
     public void Connect(WifiP2pConfig config) {
         mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
 
@@ -176,11 +170,4 @@ public class DirectMainActivity extends AppCompatActivity implements WifiP2pMana
             }
         });
     }
-
-
-
 }
-
-
-
-

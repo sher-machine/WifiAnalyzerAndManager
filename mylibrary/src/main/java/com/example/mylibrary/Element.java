@@ -1,4 +1,4 @@
-package com.example.wifiappone;
+package com.example.mylibrary;
 
 //Для описания полей пунктов списка
 public class Element {

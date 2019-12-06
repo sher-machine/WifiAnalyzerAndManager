@@ -1,6 +1,6 @@
-package com.example.wifiappone;
+package com.example.mylibrary;
 
-enum WIFI_AP_STATE {
+public enum WIFI_AP_STATE {
     WIFI_AP_STATE_DISABLING,
     WIFI_AP_STATE_DISABLED,
     WIFI_AP_STATE_ENABLING,
