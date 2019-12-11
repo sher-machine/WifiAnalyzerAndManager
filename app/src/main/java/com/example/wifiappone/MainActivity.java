@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WpsInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,7 +25,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,6 +52,7 @@ import static com.example.mylibrary.myWifiManager.finallyConnect;
 import static com.example.mylibrary.myWifiManager.infoAboutWifiSupported;
 import static com.example.mylibrary.myWifiManager.isWifiApEnabled;
 import static com.example.mylibrary.myWifiManager.startHotSpot16_api;
+import static com.example.mylibrary.myWifiManager.wpsConnect;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     Button tochka, btn3,btn4,btn5,button;
     ToggleButton toggle;
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,12 +97,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         btn3.setOnClickListener(view -> {
+
             Intent intent = new Intent();
             intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             intent.setData(Uri.parse("package:" + getPackageName()));
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
             startActivityForResult(intent, REQUEST_STATE);
+
+
+            wpsConnect(wifiManager,mWpsCallback,"ASUS","89845240");
+
         });
 
 
@@ -194,6 +201,50 @@ public class MainActivity extends AppCompatActivity {
         });
         tochka.setOnClickListener(view -> hotSpot(true));
     }
+
+
+
+        ////////        WPS BEGIN
+        //funcion wpsConnect in library
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private final WifiManager.WpsCallback mWpsCallback = new WifiManager.WpsCallback() {
+        @Override
+        public void onStarted(String pin) {
+            Toast.makeText(getApplicationContext(),"Trying pin " +pin,Toast.LENGTH_SHORT).show();
+        }
+        @Override
+        public void onSucceeded() {
+            Toast.makeText(getApplicationContext(),"Connection Succeed",Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onFailed(int reason) {
+            Toast.makeText(getApplicationContext(),"REASON: " +reason,Toast.LENGTH_SHORT).show();
+            switch (reason) {
+
+                case WifiManager.WPS_OVERLAP_ERROR:
+                    Toast.makeText(getApplicationContext(),"Failed, WPS_OVERLAP_ERROR",Toast.LENGTH_SHORT).show();
+                    break;
+                case WifiManager.WPS_WEP_PROHIBITED:
+                    Toast.makeText(getApplicationContext(),"Failed, WPS_WEP_PROHIBITED",Toast.LENGTH_SHORT).show();
+                    break;
+                case WifiManager.WPS_TKIP_ONLY_PROHIBITED:
+                    Toast.makeText(getApplicationContext(),"Failed, WPS_TKIP_ONLY_PROHIBITED",Toast.LENGTH_SHORT).show();
+                    break;
+                case WifiManager.WPS_AUTH_FAILURE:
+                    Toast.makeText(getApplicationContext(),"Failed, AUTH_FAILURE",Toast.LENGTH_SHORT).show();
+                    return;
+                case WifiManager.WPS_TIMED_OUT:
+                    Toast.makeText(getApplicationContext(),"Failed, WPS_TIMED_OUT",Toast.LENGTH_SHORT).show();
+                    return;
+                default:
+                    Toast.makeText(getApplicationContext(),"Failed, wifi_wps_failed_generic",Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
+                ///////         WPS END
 
 
 
@@ -346,7 +397,8 @@ public class MainActivity extends AppCompatActivity {
         //после 28api (android 8 )
         if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
 
-            enableLocationSettings();
+            toggleHotspot26apiPlus();
+            //enableLocationSettings();
 
             //////////////////      OPEN SETTINGS FOR CONFIGURATE AND ON/OFF HOTSPOT        //////////////////////////
             //openSettingsForConfigHotspot();
@@ -532,7 +584,7 @@ public class MainActivity extends AppCompatActivity {
             tvFreq.setText(nets[position].getFreq());
 
 
-            ImageView tvImage= (ImageView)findViewById(R.id.tvImage);
+            //ImageView tvImage= (ImageView)findViewById(R.id.tvImage);
             //tvImage.setImageResource(R.drawable.ic_signal_wifi_2_bar);
 
 

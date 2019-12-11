@@ -2,6 +2,7 @@ package com.example.mylibrary;
 
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WpsInfo;
 import android.os.Build;
 import android.util.Log;
 import android.widget.ListView;
@@ -186,8 +187,30 @@ public class myWifiManager {
                     + "\nSupport always scan Wi-Fi  - " + wifiManager.isScanAlwaysAvailable()
                     + "\nDeviceToApRttSupported - " + wifiManager.isDeviceToApRttSupported();
         }
-        return info;
+        if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            info = info + "\nSupport Wi-Fi Easy Connect - " + wifiManager.isEasyConnectSupported()
+                        + "\nSupport Wpa3 - " + wifiManager.isWpa3SaeSupported();
+        }
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                info = info +  "\nSupport Wi-Fi Easy Connect - false"
+                        + "\nSupport Wpa3 - false";
+        }
+
+            return info;
     }
 
+
+    public static void wpsConnect(WifiManager wifiManager,WifiManager.WpsCallback mWpsCallback,String bssid,String wpspin){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            bssid = "ASUS";
+            wpspin = "89845240";
+            WpsInfo wpsConfig = new WpsInfo();
+            wpsConfig.BSSID = bssid;
+            wpsConfig.pin = wpspin;
+            wifiManager.startWps(wpsConfig, mWpsCallback);
+        }
+
+    }
 
 }
